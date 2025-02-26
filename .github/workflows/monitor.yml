@@ -22,12 +22,13 @@ jobs:
 
       - name: Проверить переменную GOOGLE_CREDENTIALS
         run: |
-          if [[ -z "${{ secrets.GOOGLE_CREDENTIALS }}" ]]; then
+          if [ -z "${{ secrets.GOOGLE_CREDENTIALS }}" ]; then
             echo "❌ GOOGLE_CREDENTIALS не найден!"
             exit 1
           else
             echo "✅ GOOGLE_CREDENTIALS передан корректно"
           fi
+        shell: bash
 
       - name: Запустить мониторинг
         env:
