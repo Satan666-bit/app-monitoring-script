@@ -4,7 +4,6 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from google_play_scraper import app
 from concurrent.futures import ThreadPoolExecutor
-import schedule
 import time
 from datetime import datetime
 
@@ -22,7 +21,7 @@ client = gspread.authorize(creds)
 spreadsheet_id = "1DpbYJ5f6zdhIl1zDtn6Z3aCHZRDFTaqhsCrkzNM9Iqo"
 sheet = client.open_by_key(spreadsheet_id).sheet1  # Основная таблица
 
-# Кешируем данные таблицы
+# Всегда загружаем актуальные данные из таблицы
 all_values = sheet.get_all_values()
 apps_google_play = all_values[1:]  # Убираем заголовок
 
@@ -80,7 +79,7 @@ def fetch_google_play_data(package_name, app_number, existing_status, existing_r
         print(f"🔄 {existing_status} → {status}")
 
         # Логика изменений
-        if existing_status in ["", None]:  
+        if existing_status is None or existing_status == "":  
             log_change("Загружено новое приложение", app_number, package_name)
         elif existing_status == "ban" and status == "ready":
             log_change("Приложение появилось в сторе", app_number, package_name)
@@ -120,7 +119,7 @@ def update_google_sheets(sheet, data):
     ready_count = 0  
     color_updates = []
 
-    for i, row in enumerate(apps_google_play, start=2):
+    for i, row in enumerate(sheet.get_all_values()[1:], start=2):
         package_name = row[7]
         for app_data in data:
             if app_data[0] == package_name:
@@ -154,18 +153,14 @@ def update_google_sheets(sheet, data):
     except Exception as e:
         print(f"❌ Ошибка обновления счетчика доступных приложений: {e}")
 
-# Главная функция
-def job():
+# Главная функция (запуск и завершение)
+def main():
     print("🔄 Начинаем обновление данных...")
     data = fetch_all_data()
     update_google_sheets(sheet, data)
     flush_log()
     print("✅ Обновление завершено!")
 
-schedule.every(15).minutes.do(job)
-print("🚀 Скрипт запущен!")
-job()  
-
-while True:
-    schedule.run_pending()
-    time.sleep(60)
+# 🚀 Запуск скрипта
+if __name__ == "__main__":
+    main()
