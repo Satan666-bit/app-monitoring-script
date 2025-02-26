@@ -2,7 +2,7 @@ name: App Monitoring
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # Запуск каждые 15 минут
+    - cron: '*/5 * * * *'  # Запуск каждые 15 минут
   workflow_dispatch:  # Кнопка "Run workflow"
 
 jobs:
