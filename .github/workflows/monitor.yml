@@ -3,23 +3,23 @@ name: Run Monitoring Script
 on:
   schedule:
     - cron: "*/15 * * * *"  # Запуск каждые 15 минут
+  workflow_dispatch:  # Добавляем возможность ручного запуска
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout репозитория
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Установка Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
+      - name: Установка зависимостей
         run: pip install -r requirements.txt
 
-      - name: Run script
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+      - name: Запуск скрипта мониторинга
         run: python monitoring.py
