@@ -1,3 +1,5 @@
+import os
+import json
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from google_play_scraper import app
@@ -6,10 +8,10 @@ import schedule
 import time
 from datetime import datetime
 
-# 🔄 Подключение к Google Sheets
+# 🔄 Подключение к Google Sheets через GitHub Secrets
 print("🔄 Подключаемся к Google Sheets...")
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+creds_json = json.loads(os.getenv("GOOGLE_CREDENTIALS"))  # Загружаем ключи из секретов GitHub
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_json, ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
 client = gspread.authorize(creds)
 
 spreadsheet_id = "1DpbYJ5f6zdhIl1zDtn6Z3aCHZRDFTaqhsCrkzNM9Iqo"  # ID таблицы
@@ -112,7 +114,6 @@ def update_google_sheets(sheet, data):
 
     updates = []
     ready_count = 0  
-    color_updates = []
 
     for i, row in enumerate(apps_google_play, start=2):  # Начинаем с 2-й строки
         package_name = row[7]
@@ -124,11 +125,6 @@ def update_google_sheets(sheet, data):
 
                 if app_data[1] == "ready":
                     ready_count += 1
-
-                # Цвет ячейки (зелёный - `ready`, красный - `ban`)
-                color = {"red": 0.8, "green": 1, "blue": 0.8} if app_data[1] == "ready" else {"red": 1, "green": 0.8, "blue": 0.8}
-                color_updates.append({"range": f"A{i}", "format": {"backgroundColor": color}})
-
                 break
 
     if updates:
@@ -138,31 +134,8 @@ def update_google_sheets(sheet, data):
         except Exception as e:
             print(f"❌ Ошибка обновления данных: {e}")
 
-    # 🔄 Отправляем цветовое форматирование в одном запросе
-    if color_updates:
-        try:
-            sheet.batch_format(color_updates)
-        except Exception as e:
-            print(f"❌ Ошибка изменения цвета ячеек: {e}")
-
     # Обновляем количество доступных приложений
     try:
         sheet.update(range_name="J2", values=[[ready_count]])
     except Exception as e:
-        print(f"❌ Ошибка обновления счетчика доступных приложений: {e}")
-
-# **Главная функция**
-def job():
-    print("🔄 Начинаем обновление данных...")
-    data = fetch_all_data()
-    update_google_sheets(sheet, data)
-    flush_log()  # Отправляем логи одним запросом
-    print("✅ Обновление завершено!")
-
-schedule.every(10).minutes.do(job)
-print("🚀 Скрипт запущен!")
-job()  
-
-while True:
-    schedule.run_pending()
-    time.sleep(60)
+        print(f"❌ Ошибка обновления счетчика доступных приложений
