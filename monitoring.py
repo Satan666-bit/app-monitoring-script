@@ -10,7 +10,7 @@ from datetime import datetime
 
 # 🔄 Подключение к Google Sheets через GitHub Secrets
 print("🔄 Подключаемся к Google Sheets...")
-creds_json = json.loads(os.getenv("GOOGLE_CREDENTIALS"))  # Загружаем ключи из секретов GitHub
+creds_json = json.loads(os.getenv("GOOGLE_CREDENTIALS"))  # Загружаем ключи из GitHub Secrets
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_json, ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
 client = gspread.authorize(creds)
 
@@ -138,4 +138,20 @@ def update_google_sheets(sheet, data):
     try:
         sheet.update(range_name="J2", values=[[ready_count]])
     except Exception as e:
-        print(f"❌ Ошибка обновления счетчика доступных приложений
+        print(f"❌ Ошибка обновления счетчика доступных приложений: {e}")
+
+# **Главная функция**
+def job():
+    print("🔄 Начинаем обновление данных...")
+    data = fetch_all_data()
+    update_google_sheets(sheet, data)
+    flush_log()  # Отправляем логи одним запросом
+    print("✅ Обновление завершено!")
+
+schedule.every(15).minutes.do(job)
+print("🚀 Скрипт запущен!")
+job()  
+
+while True:
+    schedule.run_pending()
+    time.sleep(60)
