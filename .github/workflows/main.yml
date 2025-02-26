@@ -2,7 +2,7 @@ name: Monitoring Script
 
 on:
   schedule:
-    - cron: "*/30 * * * *"  # Запуск каждые 30 минут
+    - cron: "*/15 * * * *"  # Запуск каждые 15 минут
   workflow_dispatch:
 
 jobs:
