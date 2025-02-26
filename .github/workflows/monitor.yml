@@ -20,6 +20,15 @@ jobs:
       - name: Установить зависимости
         run: pip install -r requirements.txt
 
+      - name: Проверить переменную GOOGLE_CREDENTIALS
+        run: |
+          if [[ -z "${{ secrets.GOOGLE_CREDENTIALS }}" ]]; then
+            echo "❌ GOOGLE_CREDENTIALS не найден!"
+            exit 1
+          else
+            echo "✅ GOOGLE_CREDENTIALS передан корректно"
+          fi
+
       - name: Запустить мониторинг
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
