@@ -160,7 +160,7 @@ def update_google_sheets(sheet, data):
 
     # 🔄 Обновляем количество доступных приложений
     try:
-        sheet.update("J2", [[ready_count]])
+        sheet.update(range_name="J2", values=[[ready_count]])
     except Exception as e:
         print(f"❌ Ошибка обновления счетчика доступных приложений: {e}")
 
