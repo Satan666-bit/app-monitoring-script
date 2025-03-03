@@ -38,10 +38,40 @@ except gspread.exceptions.WorksheetNotFound:
     log_sheet.append_row(["Дата изменения", "Тип изменения", "Номер приложения", "Package"])  # Заголовки
 
 # Функция записи изменений в лог
+# Функция проверки и удаления старого лога "Бан приложения", если приложение вернулось в стор
+def remove_old_ban_log(package_name):
+    try:
+        spreadsheet = client.open_by_key(spreadsheet_id)
+        log_sheet = spreadsheet.worksheet("Changes Log")
+
+        all_logs = log_sheet.get_all_values()
+        updated_logs = []
+        removed = False
+
+        for row in all_logs:
+            if len(row) >= 4 and row[1] == "Бан приложения" and row[3] == package_name:
+                removed = True  # Найдена старая запись "Бан приложения", удаляем
+            else:
+                updated_logs.append(row)  # Оставляем остальные записи
+
+        if removed:
+            log_sheet.clear()  # Полностью очищаем лог-лист
+            log_sheet.append_rows(updated_logs)  # Перезаписываем без удалённых строк
+            print(f"🗑️ Удалена старая запись 'Бан приложения' для {package_name}")
+
+    except Exception as e:
+        print(f"❌ Ошибка при очистке старого лога: {e}")
+
+# Функция записи изменений в лог с учётом возврата приложения в стор
 log_buffer = []
 
 def log_change(change_type, app_number, package_name):
     print(f"📌 Логируем: {change_type} - {package_name}")
+
+    # Если приложение вернулось в стор, удаляем старую запись "Бан приложения"
+    if change_type == "Приложение вернулось в стор":
+        remove_old_ban_log(package_name)
+
     log_buffer.append([datetime.today().strftime("%Y-%m-%d"), change_type, app_number, package_name])
 
 def flush_log():
