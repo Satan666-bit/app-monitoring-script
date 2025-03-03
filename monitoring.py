@@ -117,29 +117,32 @@ def fetch_all_data():
 
 # **Обновление данных в Google Sheets**
 def update_google_sheets(sheet, data):
+    print("🔄 Перезагружаем данные из Google Sheets...")
+    all_values = sheet.get_all_values()  # Загружаем актуальные данные
+    apps_google_play = all_values[1:]  # Пропускаем заголовки
+
     print("🔄 Обновляем данные в Google Sheets...")
 
     updates = []
     ready_count = 0  
     color_updates = []
 
-    for i, row in enumerate(apps_google_play, start=2):  # Начинаем с 2-й строки
-        app_number = row[0]
-        package_name = row[7]
+    for i, row in enumerate(apps_google_play, start=2):  # Стартуем с 2-й строки
+        package_name = row[7]  # Package приложения
         for app_data in data:
-            if app_data[1] == package_name:
-                updates.append({"range": f"D{i}", "values": [[app_data[2]]]})
-                updates.append({"range": f"F{i}", "values": [[app_data[3]]]})
-                updates.append({"range": f"G{i}", "values": [[app_data[4]]]})
+            if app_data[0] == package_name:
+                updates.append({"range": f"D{i}", "values": [[app_data[1]]]})
+                updates.append({"range": f"F{i}", "values": [[app_data[2]]]})
+                updates.append({"range": f"G{i}", "values": [[app_data[3]]]})
 
-                if app_data[2] == "ready":
+                if app_data[1] == "ready":
                     ready_count += 1
 
                 # Цвет ячейки (зелёный - `ready`, красный - `ban`)
-                color = {"red": 0.8, "green": 1, "blue": 0.8} if app_data[2] == "ready" else {"red": 1, "green": 0.8, "blue": 0.8}
+                color = {"red": 0.8, "green": 1, "blue": 0.8} if app_data[1] == "ready" else {"red": 1, "green": 0.8, "blue": 0.8}
                 color_updates.append({"range": f"A{i}", "format": {"backgroundColor": color}})
 
-                break
+                break  # Переходим к следующему приложению
 
     if updates:
         try:
@@ -148,15 +151,14 @@ def update_google_sheets(sheet, data):
         except Exception as e:
             print(f"❌ Ошибка обновления данных: {e}")
 
-    # 🔄 Отправляем цветовое форматирование в одном запросе
+    # 🔄 Обновляем цветовое оформление в одном запросе
     if color_updates:
         try:
             sheet.batch_format(color_updates)
-            print("✅ Цветовое оформление обновлено.")
         except Exception as e:
             print(f"❌ Ошибка изменения цвета ячеек: {e}")
 
-    # Обновляем количество доступных приложений
+    # 🔄 Обновляем количество доступных приложений
     try:
         sheet.update("J2", [[ready_count]])
     except Exception as e:
