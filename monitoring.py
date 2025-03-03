@@ -81,27 +81,26 @@ def fetch_google_play_data(package_name, app_number, existing_status, existing_r
         print(f"📅 Дата {package_name}: {final_date}")
         print(f"🔄 {existing_status} → {status}")
 
-        # Логика записи изменений
-        print(f"📌 Проверка нового приложения: {app_number}, Package: {package_name}, Статус в таблице: '{existing_status}'")
-        if existing_status in ["", " ", None]:  
+        # 🔥 **Исправленная логика логирования**
+        if existing_status in ["", None]:  
             log_change("Загружено новое приложение", app_number, package_name)
         elif existing_status == "ban" and status == "ready":
             log_change("Приложение появилось в сторе", app_number, package_name)
-        elif existing_status == "ready" and status == "ban":
-            log_change("Бан приложения", app_number, package_name)
 
-        return [app_number, package_name, status, final_date, not_found_date]
+        return [package_name, status, final_date, not_found_date]
 
     except Exception as e:
         print(f"❌ Ошибка при проверке {package_name}: {e}")
         status = "ban"
         not_found_date = existing_not_found_date or datetime.today().strftime("%Y-%m-%d")
 
-        # Логируем бан только если раньше приложение было доступно
-        if existing_status not in ["ban", None, ""]:
+        # 🔥 **Теперь если статус был пустым – это новое приложение, даже если оно забанено**
+        if existing_status in ["", None]:  
+            log_change("Загружено новое приложение", app_number, package_name)
+        elif existing_status not in ["ban", None, ""]:
             log_change("Бан приложения", app_number, package_name)
 
-        return [app_number, package_name, status, existing_release_date, not_found_date]
+        return [package_name, status, existing_release_date, not_found_date]
 
 # **Функция проверки всех приложений**
 def fetch_all_data():
