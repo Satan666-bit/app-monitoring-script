@@ -82,7 +82,7 @@ def fetch_google_play_data(package_name, app_number, existing_status, existing_r
         print(f"🔄 {existing_status} → {status}")
 
         # Логика записи изменений
-        if existing_status in ["", None]:  
+        if existing_status in ["", " ", None]:  
             log_change("Загружено новое приложение", app_number, package_name)
         elif existing_status == "ban" and status == "ready":
             log_change("Приложение появилось в сторе", app_number, package_name)
