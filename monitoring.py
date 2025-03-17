@@ -37,7 +37,18 @@ except gspread.exceptions.WorksheetNotFound:
     log_sheet = client.open_by_key(spreadsheet_id).add_worksheet(title="Changes Log", rows="1000", cols="4")
     log_sheet.append_row(["Дата изменения", "Тип изменения", "Номер приложения", "Package"])  # Заголовки
 
-# Функция записи изменений в лог
+# 🛠️ Функция проверки, есть ли в "Changes Log" запись "Бан приложения"
+def check_ban_log_exists(package_name):
+    try:
+        all_logs = log_sheet.get_all_values()
+        for row in all_logs:
+            if len(row) >= 4 and row[1] == "Бан приложения" and row[3] == package_name:
+                return True  # Если нашли запись, возвращаем True
+        return False  # Если нет записи, возвращаем False
+    except Exception as e:
+        print(f"❌ Ошибка при проверке лога: {e}")
+        return False
+
 # Функция проверки и удаления старого лога "Бан приложения", если приложение вернулось в стор
 def remove_old_ban_log(package_name):
     try:
@@ -115,7 +126,12 @@ def fetch_google_play_data(package_name, app_number, existing_status, existing_r
         if existing_status in ["", None]:  
             log_change("Загружено новое приложение", app_number, package_name)
         elif existing_status == "ban" and status == "ready":
-            log_change("Приложение появилось в сторе", app_number, package_name)
+    # Проверяем, есть ли в "Changes Log" запись "Бан приложения" для этого приложения
+            if check_ban_log_exists(package_name):
+                remove_old_ban_log(package_name)  # 🗑️ Удаляем старую запись "Бан приложения"
+                log_change("Приложение вернулось в стор", app_number, package_name)
+            else:
+                log_change("Приложение появилось в сторе", app_number, package_name)
 
         return [package_name, status, final_date, not_found_date]
 
